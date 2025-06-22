@@ -43,7 +43,7 @@ import { Label } from './components/label';
 import { CastUIContainer } from './components/castuicontainer';
 import { UIConditionContext, UIManager } from './uimanager';
 import { UIConfig } from './uiconfig';
-import { PlayerAPI } from 'bitmovin-player';
+import {PlayerAPI, PlayerEvent} from 'bitmovin-player';
 import { i18n } from './localization/i18n';
 import { SubtitleListBox } from './components/subtitlelistbox';
 import { AudioTrackListBox } from './components/audiotracklistbox';
@@ -58,6 +58,16 @@ export namespace UIFactory {
   }
 
   export function buildDefaultSmallScreenUI(player: PlayerAPI, config: UIConfig = {}): UIManager {
+    [PlayerEvent.CastStarted].forEach(eventConst => {
+      player.on(eventConst, payload => {
+        //eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        window.bitmovin.customMessageHandler?.sendAsynchronous(
+            eventConst,
+            JSON.stringify(payload)
+        );
+      });
+    });
+
     return UIFactory.buildModernSmallScreenUI(player, config);
   }
 
@@ -224,103 +234,14 @@ export namespace UIFactory {
   export function modernSmallScreenUI() {
     let subtitleOverlay = new SubtitleOverlay();
 
-    let mainSettingsPanelPage = new SettingsPanelPage({
-      components: [
-        new SettingsPanelItem(i18n.getLocalizer('settings.video.quality'), new VideoQualitySelectBox()),
-        new SettingsPanelItem(i18n.getLocalizer('speed'), new PlaybackSpeedSelectBox()),
-        new SettingsPanelItem(i18n.getLocalizer('settings.audio.track'), new AudioTrackSelectBox()),
-        new SettingsPanelItem(i18n.getLocalizer('settings.audio.quality'), new AudioQualitySelectBox()),
-      ],
-    });
-
-    let settingsPanel = new SettingsPanel({
-      components: [mainSettingsPanelPage],
-      hidden: true,
-      pageTransitionAnimation: false,
-      hideDelay: -1,
-    });
-
-    let subtitleSettingsPanelPage = new SubtitleSettingsPanelPage({
-      settingsPanel: settingsPanel,
-      overlay: subtitleOverlay,
-    });
-
-    let subtitleSettingsOpenButton = new SettingsPanelPageOpenButton({
-      targetPage: subtitleSettingsPanelPage,
-      container: settingsPanel,
-      ariaLabel: i18n.getLocalizer('settings.subtitles'),
-      text: i18n.getLocalizer('open'),
-    });
-
-    const subtitleSelectBox = new SubtitleSelectBox();
-
-    mainSettingsPanelPage.addComponent(
-      new SettingsPanelItem(
-        new SubtitleSettingsLabel({
-          text: i18n.getLocalizer('settings.subtitles'),
-          opener: subtitleSettingsOpenButton,
-        }),
-        subtitleSelectBox,
-        {
-          role: 'menubar',
-        },
-      ),
-    );
-
-    settingsPanel.addComponent(subtitleSettingsPanelPage);
-
-    settingsPanel.addComponent(new CloseButton({ target: settingsPanel }));
-    subtitleSettingsPanelPage.addComponent(new CloseButton({ target: settingsPanel }));
-
-    let controlBar = new ControlBar({
-      components: [
-        new Container({
-          components: [
-            new PlaybackTimeLabel({
-              timeLabelMode: PlaybackTimeLabelMode.CurrentTime,
-              hideInLivePlayback: true,
-            }),
-            new SeekBar({ label: new SeekBarLabel() }),
-            new PlaybackTimeLabel({
-              timeLabelMode: PlaybackTimeLabelMode.TotalTime,
-              cssClasses: ['text-right'],
-            }),
-          ],
-          cssClasses: ['controlbar-top'],
-        }),
-      ],
-    });
-
     return new UIContainer({
       components: [
         subtitleOverlay,
-        new BufferingOverlay(),
-        new CastStatusOverlay(),
-        new PlaybackToggleOverlay(),
-        new RecommendationOverlay(),
-        controlBar,
-        new TitleBar({
-          components: [
-            new MetadataLabel({ content: MetadataLabelContent.Title }),
-            new CastToggleButton(),
-            new VRToggleButton(),
-            new PictureInPictureToggleButton(),
-            new AirPlayToggleButton(),
-            new VolumeToggleButton(),
-            new SettingsToggleButton({ settingsPanel: settingsPanel }),
-            new FullscreenToggleButton(),
-          ],
-        }),
-        settingsPanel,
-        new Watermark(),
-        new ErrorMessageOverlay(),
       ],
       cssClasses: ['ui-skin-smallscreen'],
       hideDelay: 2000,
       hidePlayerStateExceptions: [
-        PlayerUtils.PlayerState.Prepared,
-        PlayerUtils.PlayerState.Paused,
-        PlayerUtils.PlayerState.Finished,
+
       ],
     });
   }
