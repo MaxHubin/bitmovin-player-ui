@@ -60,6 +60,7 @@ export namespace UIFactory {
   export function buildDefaultSmallScreenUI(player: PlayerAPI, config: UIConfig = {}): UIManager {
     [PlayerEvent.CastStarted].forEach(eventConst => {
       player.on(eventConst, payload => {
+        //@ts-ignore
         //eslint-disable-next-line @typescript-eslint/no-unsafe-call
         window.bitmovin.customMessageHandler?.sendAsynchronous(
             eventConst,

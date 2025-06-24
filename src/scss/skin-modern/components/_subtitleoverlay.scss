@@ -47,11 +47,22 @@
       }
     }
 
+    align-items: center !important;
+
     .#{$prefix}-ui-subtitle-label {
       @include text-border($subtitle-text-border-color);
 
       color: $subtitle-text-color;
       height: fit-content;
+
+      //background: rgba(0, 0, 0, 0.6) !important;
+      padding: 10px !important;
+      width: auto !important;
+      align-self: center;
+
+      position: absolute;
+      left: 50% !important;
+      transform: translateX(-50%);
 
       // Break labels into separate lines
       // sass-lint:disable force-pseudo-nesting
@@ -61,6 +72,15 @@
         height: 0;
         white-space: pre-line;
         width: 0;
+      }
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: -1;
+        border-radius: 4px;
       }
     }
 
